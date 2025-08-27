@@ -235,22 +235,18 @@ public class Editor {
 ### Create History class
 
 ```java
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Stack;
 
 public class History {
-    private List<EditorState> states = new ArrayList<>();
+    private Stack<EditorState> history = new Stack<>();
 
     public void push(EditorState state) {
-        states.add(state);
+        history.push(state);
     }
 
     public EditorState pop() {
-        var lastIndex = states.size() - 1;
-        var lastState = states.get(lastIndex);
-        states.remove(lastState);
-
-        return lastState;
+        history.pop();
+        return history.peek();
     }
 }
 ```
@@ -266,12 +262,12 @@ public class Main {
         editor.setContent("a");
         history.push(editor.createState());
 
-
         editor.setContent("b");
         history.push(editor.createState());
 
-
         editor.setContent("c");
+        history.push(editor.createState());
+
         System.out.println(editor.getContent());
 
         editor.restore(history.pop());
@@ -288,17 +284,14 @@ public class Main {
 - Violates Single responsibility principle
 
 ```java
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Stack;
 
 public class Editor {
     private String content;
-    private List<String> history = new ArrayList<>();
-    private int currentIndex = -1;
+    private Stack<String> history = new Stack<>();
 
     public void setContent(String content) {
-        history.add(content);
-        currentIndex++;
+        history.push(content);
         this.content = content;
     }
 
@@ -307,8 +300,8 @@ public class Editor {
     }
 
     public void undo() {
-        currentIndex--;
-        content = history.get(currentIndex);
+        history.pop();
+        content = history.peek();
     }
 }
 
@@ -335,43 +328,32 @@ public class Main {
 ### Update History class
 
 ```java
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Stack;
 
 public class History {
-    private List<EditorState> undoStack = new ArrayList<>();
-    private List<EditorState> redoStack = new ArrayList<>();
+    private Stack<EditorState> undoStack = new Stack<>();
+    private Stack<EditorState> redoStack = new Stack<>();
 
     public void push(EditorState state) {
-        undoStack.add(state);
+        undoStack.push(state);
         redoStack.clear();
     }
 
-    public EditorState undo() {
-        var lastIndex = undoStack.size() - 1;
-        var lastState = undoStack.get(lastIndex);
-        undoStack.remove(lastIndex);
-
-        redoStack.add(lastState);
-
-        return undoStack.get(undoStack.size() - 1);
+    public EditorState popFromUndo() {
+        var lastState = undoStack.pop();
+        redoStack.push(lastState);
+        return undoStack.peek();
     }
 
-    public EditorState redo() {
-        var lastIndex = redoStack.size() - 1;
-        var lastState = redoStack.get(lastIndex);
-        redoStack.remove(lastIndex);
-
-        undoStack.add(lastState);
-
+    public EditorState popFromRedo() {
+        var lastState = redoStack.pop();
+        undoStack.push(lastState);
         return lastState;
-    }
-
-    public EditorState pop() {
-        return undo();
     }
 }
 ```
+
+### Update Main class
 
 ```java
 public class Main {
@@ -390,17 +372,17 @@ public class Main {
         System.out.println(editor.getContent()); // c
 
         // Undo operations
-        editor.restore(history.undo());
+        editor.restore(history.popFromUndo());
         System.out.println(editor.getContent()); // b
 
-        editor.restore(history.undo());
+        editor.restore(history.popFromUndo());
         System.out.println(editor.getContent()); // a
 
         // Redo operations
-        editor.restore(history.redo());
+        editor.restore(history.popFromRedo());
         System.out.println(editor.getContent()); // b
 
-        editor.restore(history.redo());
+        editor.restore(history.popFromRedo());
         System.out.println(editor.getContent()); // c
     }
 }
