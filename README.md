@@ -6,6 +6,7 @@
 2. [Behavioral Design Patterns](#behavioral-design-patterns)
 3. [Memento Pattern](#memento-pattern)
 4. [Observer Pattern](#observer-pattern)
+5. [State Pattern](#state-pattern)
 
 ## UML Notation for Class Diagram
 
@@ -597,6 +598,182 @@ public class Main {
 
         dataSource.removeBarChart();
         dataSource.setValue(15);
+    }
+}
+```
+
+### State Pattern
+
+- Allows an object to behave differently depending on the state it is in.
+
+### Applicability
+
+- Use the State pattern in any of the following situations:
+  - An object's behavior depends on its state, and it must change its behavior at run-time depending on that state.
+  - Operations have large, multipart conditional statements that depend on the object's state
+
+```mermaid
+%%{init: { "flowchart": { "rankSpacing": 100, "nodeSpacing": 100 }}}%%
+classDiagram
+direction LR
+class Canvas {
+    - currentTool
+    + mouseDown()
+    + mouseUp()
+    + getCurrentTool()
+    + setCurrentTool()
+}
+
+class Tool {
+    <<interface>>
+    + mouseDown()
+    + mouseUp()
+}
+
+class Selection {
+    + mouseDown()
+    + mouseUp()
+}
+class Brush {
+    + mouseDown()
+    + mouseUp()
+}
+
+Canvas o--Tool
+Tool <|-- Selection
+Tool <|-- Brush
+```
+
+### General Language
+
+- Canvas is called Context
+- Tool is called State
+- Selection / Brush is called ConcreteState
+
+#### Create Tool interface
+
+```java
+public interface Tool {
+  void mouseDown();
+  void mouseUp();
+}
+```
+
+#### Create Canvas class
+
+```java
+public class Canvas {
+  private Tool currentTool;
+
+  public void mouseDown() {
+    currentTool.mouseDown();
+  }
+
+  public void mouseUp() {
+    currentTool.mouseUp();
+  }
+
+  public Tool getCurrentTool() {
+    return currentTool;
+  }
+
+  public void setCurrentTool(Tool currentTool) {
+    this.currentTool = currentTool;
+  }
+}
+```
+
+#### Implement Concrete Tool: Pen Tool
+
+```java
+public class PenTool implements Tool {
+  @Override
+  public void mouseDown() {
+    System.out.println("Pen icon");
+  }
+
+  @Override
+  public void mouseUp() {
+    System.out.println("Draw a line");
+  }
+}
+```
+
+#### Implement Concrete Tool: Selection Tool
+
+```java
+public class SelectionTool implements Tool {
+  @Override
+  public void mouseDown() {
+    System.out.println("Selection icon");
+  }
+
+  @Override
+  public void mouseUp() {
+    System.out.println("Draw a dashed rectangle");
+  }
+}
+```
+
+#### Add Main class
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        var canvas = new Canvas();
+        canvas.setCurrentTool(new PenTool());
+        canvas.mouseDown();
+        canvas.mouseUp();
+        canvas.setCurrentTool(new SelectionTool());
+        canvas.mouseDown();
+        canvas.mouseUp();
+    }
+}
+```
+
+#### Without using State Pattern
+
+- Violates Open for extension, Closed for modification principle
+- Violates Single responsibility principle
+
+```java
+class Canvas {
+    private String currentTool;
+
+    public void mouseDown() {
+        if (currentTool == "pen") {
+            System.out.println("Pen icon");
+        } else if (currentTool == "selection") {
+            System.out.println("Selection icon");
+        }
+    }
+
+    public void mouseUp() {
+        if (currentTool == "pen") {
+            System.out.println("Draw a line");
+        } else if (currentTool == "selection") {
+            System.out.println("Draw a dashed rectangle");
+        }
+    }
+
+    public String getCurrentTool() {
+        return currentTool;
+    }
+
+    public void setCurrentTool(String currentTool) {
+        this.currentTool = currentTool;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        var canvas = new Canvas();
+        canvas.setCurrentTool("pen");
+        canvas.mouseDown();
+        canvas.mouseUp();
+        canvas.setCurrentTool("selection");
+        canvas.mouseDown();
+        canvas.mouseUp();
     }
 }
 ```
