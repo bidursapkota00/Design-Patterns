@@ -7,6 +7,7 @@
 3. [Memento Pattern](#memento-pattern)
 4. [Observer Pattern](#observer-pattern)
 5. [State Pattern](#state-pattern)
+6. [Iterator Pattern](#iterator-pattern)
 
 ## UML Notation for Class Diagram
 
@@ -777,3 +778,268 @@ public class Main {
     }
 }
 ```
+
+### Iterator Pattern
+
+- Allows iterating over an object without having to expose the object’s internal data structure (which may change in the future).
+
+```mermaid
+%%{init: { "flowchart": { "rankSpacing": 100, "nodeSpacing": 100 }}}%%
+classDiagram
+direction LR
+class BrowseHistory {
+    - urls
+    + addUrl()
+    + removeUrl()
+    + createIterator()
+}
+
+class Iterator {
+    <<interface>>
+    + hasNext()
+    + next()
+}
+
+class ListIterator {
+    + hasNext()
+    + next()
+}
+
+class Main {
+    + main()
+}
+
+
+BrowseHistory ..> ListIterator
+ListIterator "1" o-- "1" BrowseHistory
+Iterator <|-- ListIterator
+Main ..> BrowseHistory
+Main ..> Iterator
+```
+
+### General Language
+
+- BrowseHistory is called Aggregate
+- ListIterator is called ConcreteIterator
+
+#### Create Iterator interface
+
+```java
+public interface Iterator {
+    boolean hasNext();
+    String next();
+}
+```
+
+#### Create BrowseHistory class and nested ListIterator class
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+public class BrowseHistory {
+    private List<String> urls = new ArrayList<>();
+
+    public void addUrl(String url) {
+        urls.add(url);
+    }
+
+    public String removeUrl() {
+        return urls.remove(urls.size() - 1);
+    }
+
+    public Iterator createIterator() {
+        return new ListIterator(this);
+    }
+
+    public class ListIterator implements Iterator {
+        private BrowseHistory browseHistory;
+        private int index = 0;
+
+        public ListIterator(BrowseHistory browseHistory) {
+            this.browseHistory = browseHistory;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return index < browseHistory.urls.size();
+        }
+
+        @Override
+        public String next() {
+            return browseHistory.urls.get(index++);
+        }
+    }
+}
+```
+
+#### Add Main class
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        var history = new BrowseHistory();
+        history.addUrl("apple.com");
+        history.addUrl("fb.com");
+        history.addUrl("instagram.com");
+
+        Iterator iterator = history.createIterator();
+        while (iterator.hasNext()) {
+            String url = iterator.next();
+            System.out.println(url);
+        }
+    }
+}
+```
+
+#### Change BrowseHistory urls' Data Structure to Array
+
+```java
+public class BrowseHistory {
+    private String[] urls = new String[10];
+    private int size = 0;
+
+    public void addUrl(String url) {
+        urls[size++] = url;
+    }
+
+    public String removeUrl() {
+        return urls[--size];
+    }
+
+    public Iterator createIterator() {
+        return new ArrayIterator(this);
+    }
+
+    public class ArrayIterator implements Iterator {
+        private BrowseHistory url;
+        private int index = 0;
+
+        public ArrayIterator(BrowseHistory url) {
+            this.url = url;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return index < url.size;
+        }
+
+        @Override
+        public String next() {
+            return url.urls[index++];
+        }
+    }
+}
+```
+
+##### Why interace instead of implementing hasnext(), next() methods directly inside BrowseHistory?
+
+- With direct methods in the aggregate, you can only have ONE iteration at a time.
+
+```java
+// BAD: Direct implementation in aggregate
+var history = new BrowseHistory();
+// Only ONE position tracker in the class
+history.next(); // moves position to 1
+history.next(); // moves position to 2
+
+// Can't have multiple iterations simultaneously
+```
+
+- With separate iterators, you can have multiple independent iterations supporting thread safety. (Current way)
+
+```java
+// GOOD: Iterator pattern
+var history = new BrowseHistory();
+Iterator iterator1 = history.createIterator();
+Iterator iterator2 = history.createIterator();
+
+iterator1.next(); // iterator1 at position 1, iterator2 still at 0
+iterator2.next(); // iterator2 at position 1, iterator1 still at 1
+```
+
+##### Why nested Concrete Iterator?
+
+- The inner class doesn't pollute the global namespace.
+- In a package, You can have many Aggregate class that may need same name ArrayIterator.
+
+#### Without using Iterator Pattern
+
+#### Using List
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+public class BrowseHistory {
+    private List<String> urls = new ArrayList<>();
+
+    public void addUrl(String url) {
+        urls.add(url);
+    }
+
+    public String removeUrl() {
+        return urls.remove(urls.size() - 1);
+    }
+
+    public List<String> getUrls(){
+        return urls;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        var history = new BrowseHistory();
+        history.addUrl("apple.com");
+        history.addUrl("fb.com");
+        history.addUrl("instagram.com");
+
+        for(int i=0; i<history.getUrls().size(); i++){
+            System.out.println(history.getUrls().get(i));
+        }
+    }
+}
+```
+
+#### Using Array
+
+```java
+public class BrowseHistory {
+    private String[] urls = new String[10];
+    private int size = 0;
+
+    public void addUrl(String url) {
+        urls[size++] = url;
+    }
+
+    public String removeUrl() {
+        return urls[--size];
+    }
+
+    public String[] getUrls(){
+        return urls;
+    }
+
+    public int getSize(){
+        return size;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        var history = new BrowseHistory();
+        history.addUrl("apple.com");
+        history.addUrl("fb.com");
+        history.addUrl("instagram.com");
+
+        for(int i=0; i<history.getSize(); i++){
+            System.out.println(history.getUrls()[i]);
+        }
+    }
+}
+```
+
+#### Disadvantage
+
+- Encapsulation Violation as Client code must know the internal implementation details of size and urls
+- Tight Coupling as Changes to the internal structure (e.g., switching from array to LinkedList) would break all client code
