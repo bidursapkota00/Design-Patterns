@@ -821,6 +821,7 @@ Main ..> Iterator
 
 - BrowseHistory is called Aggregate
 - ListIterator is called ConcreteIterator
+- Main is called Client1
 
 #### Create Iterator interface
 
@@ -831,7 +832,66 @@ public interface Iterator {
 }
 ```
 
-#### Create BrowseHistory class and nested ListIterator class
+#### Create BrowseHistory class and nested ArrayIterator class
+
+```java
+public class BrowseHistory {
+    private String[] urls = new String[10];
+    private int size = 0;
+
+    public void addUrl(String url) {
+        urls[size++] = url;
+    }
+
+    public String removeUrl() {
+        return urls[--size];
+    }
+
+    public Iterator createIterator() {
+        return new ArrayIterator(this);
+    }
+
+    public class ArrayIterator implements Iterator {
+        private BrowseHistory url;
+        private int index = 0;
+
+        public ArrayIterator(BrowseHistory url) {
+            this.url = url;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return index < url.size;
+        }
+
+        @Override
+        public String next() {
+            return url.urls[index++];
+        }
+    }
+}
+```
+
+#### Add Main class
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        var history = new BrowseHistory();
+        history.addUrl("apple.com");
+        history.addUrl("fb.com");
+        history.addUrl("instagram.com");
+
+        Iterator iterator = history.createIterator();
+        while (iterator.hasNext()) {
+            String url = iterator.next();
+            System.out.println(url);
+        }
+    }
+}
+```
+
+#### Change BrowseHistory urls' Data Structure to List
 
 ```java
 import java.util.ArrayList;
@@ -868,65 +928,6 @@ public class BrowseHistory {
         @Override
         public String next() {
             return browseHistory.urls.get(index++);
-        }
-    }
-}
-```
-
-#### Add Main class
-
-```java
-public class Main {
-    public static void main(String[] args) {
-        var history = new BrowseHistory();
-        history.addUrl("apple.com");
-        history.addUrl("fb.com");
-        history.addUrl("instagram.com");
-
-        Iterator iterator = history.createIterator();
-        while (iterator.hasNext()) {
-            String url = iterator.next();
-            System.out.println(url);
-        }
-    }
-}
-```
-
-#### Change BrowseHistory urls' Data Structure to Array
-
-```java
-public class BrowseHistory {
-    private String[] urls = new String[10];
-    private int size = 0;
-
-    public void addUrl(String url) {
-        urls[size++] = url;
-    }
-
-    public String removeUrl() {
-        return urls[--size];
-    }
-
-    public Iterator createIterator() {
-        return new ArrayIterator(this);
-    }
-
-    public class ArrayIterator implements Iterator {
-        private BrowseHistory url;
-        private int index = 0;
-
-        public ArrayIterator(BrowseHistory url) {
-            this.url = url;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return index < url.size;
-        }
-
-        @Override
-        public String next() {
-            return url.urls[index++];
         }
     }
 }
