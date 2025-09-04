@@ -8,6 +8,7 @@
 4. [Observer Pattern](#observer-pattern)
 5. [State Pattern](#state-pattern)
 6. [Iterator Pattern](#iterator-pattern)
+7. [Strategy Pattern](#strategy-pattern)
 
 ## UML Notation for Class Diagram
 
@@ -1044,3 +1045,141 @@ public class Main {
 
 - Encapsulation Violation as Client code must know the internal implementation details of size and urls
 - Tight Coupling as Changes to the internal structure (e.g., switching from array to LinkedList) would break all client code
+
+### Strategy Pattern
+
+- Allows passing different algorithms (behaviours) to an object.
+- Makes algorithm interchangeable.
+- Allows defining a template (skeleton) for an operation. Specific steps will then
+  be implemented in subclasses.
+
+### Applicability
+
+- Use the Strategy pattern in any of the following situations:
+  - You need different variants of an algorithm. For example, Photoshop requires many compression algorithm depending type of image and image compression ratio requirement of user. Also may require different filters like black & white filter, high contrast filter, etc.
+  - Algorithm uses data that clients shouldn't know about. Use the Strategy pattern to avoid exposing complex, algorithm-specific data structures.
+  - A class defines many behaviors, and these appear as multiple conditional statements in its operations. Instead of many conditionals, move related conditional branches into their own Strategy class.
+
+```mermaid
+%%{init: { "flowchart": { "rankSpacing": 100, "nodeSpacing": 100 }}}%%
+classDiagram
+direction LR
+class PaymentService {
+    - strategy
+    + setPaymentStrategy(PaymentStrategy)
+    + pay()
+}
+
+class PaymentStrategy {
+    <<interface>>
+    + processPayment()
+}
+
+class DebitCardPayment {
+    + processPayment()
+}
+class EsewaPayment {
+    + processPayment()
+}
+
+PaymentService o-- PaymentStrategy
+PaymentStrategy <|-- DebitCardPayment
+PaymentStrategy <|-- EsewaPayment
+```
+
+### General Language
+
+- PaymentService is called Context
+- PaymentStrategy is called Strategy
+- DebitCardPayment / EsewaPayment is called ConcreteStrategy
+
+#### Create PaymentStrategy interface
+
+```java
+public interface PaymentStrategy {
+  void processPayment();
+}
+```
+
+#### Create PaymentService class
+
+```java
+public class PaymentService {
+  private PaymentStrategy strategy;
+
+  public void setPaymentStrategy(PaymentStrategy strategy){
+      this.strategy = strategy;
+  }
+
+  public void pay(){
+      strategy.processPayment(); //Polymorphic Behaviour
+  }
+}
+```
+
+#### Implement Concrete PaymentStrategy: DebitCardPayment
+
+```java
+public class DebitCardPayment implements PaymentStrategy {
+    @Override
+    public void processPayment() {
+        System.out.println("Making payment via Debit Card");
+    }
+}
+```
+
+#### Implement Concrete PaymentStrategy: EsewaPayment
+
+```java
+public class EsewaPayment implements PaymentStrategy {
+    @Override
+    public void processPayment() {
+        System.out.println("Making payment via Esewa");
+    }
+}
+```
+
+#### Add Main class
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        PaymentService paymentService = new PaymentService();
+        paymentService.setPaymentStrategy(new EsewaPayment());
+        paymentService.pay();
+    }
+}
+```
+
+#### Without using Strategy Pattern
+
+- Violates Open for extension, Closed for modification principle
+- Violates Dependency Inversion Principle (DIP); High-level module `PaymentService` depends directly on low-level details (if-else implementation of Credit Card, Debit Card, Esewa).
+- Violates Single responsibility principle
+
+```java
+public class PaymentService{
+    public void processPayment(String paymentMethod){
+        if(paymentMethod.equals("Credit Card")){
+            System.out.println("Making payment via credit card");
+        }
+        else if(paymentMethod.equals("Debit Card")){
+            System.out.println("Making payment via debit card");
+        }
+        else if(paymentMethod.equals("Esewa")){
+            //huge algorithm
+            System.out.println("Making payment via Esewa");
+        }
+        else{
+            System.out.println("Unsupported Payment method");
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        PaymentService paymentService = new PaymentService();
+        paymentService.processPayment("Esewa");
+    }
+}
+```
