@@ -10,6 +10,10 @@
 6. [Iterator Pattern](#iterator-pattern)
 7. [Strategy Pattern](#strategy-pattern)
 
+---
+
+---
+
 ## UML Notation for Class Diagram
 
 ### Association
@@ -147,6 +151,12 @@ class OrderProcessor {
 }
 ```
 
+---
+
+---
+
+---
+
 ## Design Patterns
 
 ## Behavioral Design Patterns
@@ -200,22 +210,22 @@ History o-- EditorState
 classDiagram
 direction LR
 class Originator {
-    - content: String
-    + createState(): EditorState
-    + restore(EditorState): void
-    + getContent(): String
-    + setContent(String): void
+    - state
+    + createMemento(): Memento
+    + restore(Memento): void
+    + getMemento()
+    + setMemento(Memento): void
 }
 
 class Memento {
-    - content: String
-    + getContent(): String
+    - state
+    + getState()
 }
 
 class Caretaker {
-    - states: Stack
-    + push(EditorState): void
-    + pop(): EditorState
+    - states: List
+    + push(Memento): void
+    + pop(): Memento
 }
 
 Originator  -->  Memento
@@ -418,6 +428,12 @@ public class Main {
 }
 ```
 
+---
+
+---
+
+---
+
 ### Observer Pattern
 
 - Allows an object notify other objects when its state changes.
@@ -433,24 +449,25 @@ public class Main {
 classDiagram
 direction LR
 class DataSource {
-    - value
-    + getValue()
-    + setValue(value)
-    + addObserver(obs)
-    + removeObserver(obs)
-    + notifyObservers()
+    - observers: List
+    - value: int
+    + getValue(): int
+    + setValue(int): void
+    + addObserver(Observer): void
+    + removeObserver(Observer): void
+    + notifyObservers(): void
 }
 
 class Observer {
     <<interface>>
-    + update()
+    + update(): void
 }
 
 class BarChart {
-    + update()
+    + update(): void
 }
 class PieChart {
-    + update()
+    + update(): void
 }
 
 DataSource "1" o-- "*" Observer
@@ -468,21 +485,22 @@ Observer <|-- PieChart
 classDiagram
 direction LR
 class Subject {
-    - value
-    + getValue()
-    + setValue(value)
-    + addObserver(obs)
-    + removeObserver(obs)
-    + notifyObservers()
+    - observers: List
+    - value: int
+    + getValue(): int
+    + setValue(int): void
+    + addObserver(Observer): void
+    + removeObserver(Observer): void
+    + notifyObservers(): void
 }
 
 class Observer {
     <<interface>>
-    + update()
+    + update(): void
 }
 
 class ConcreteObserver {
-    + update()
+    + update(): void
 }
 
 Subject "1" o-- "*" Observer
@@ -657,6 +675,12 @@ public class Main {
 }
 ```
 
+---
+
+---
+
+---
+
 ### State Pattern
 
 - Allows an object to behave differently depending on the state it is in.
@@ -672,26 +696,26 @@ public class Main {
 classDiagram
 direction LR
 class Canvas {
-    - currentTool
-    + mouseDown()
-    + mouseUp()
-    + getCurrentTool()
-    + setCurrentTool()
+    - currentTool: Tool
+    + mouseDown(): void
+    + mouseUp(): void
+    + getCurrentTool(): Tool
+    + setCurrentTool(Tool): void
 }
 
 class Tool {
     <<interface>>
-    + mouseDown()
-    + mouseUp()
+    + mouseDown(): void
+    + mouseUp(): void
 }
 
 class Selection {
-    + mouseDown()
-    + mouseUp()
+    + mouseDown(): void
+    + mouseUp(): void
 }
 class Brush {
-    + mouseDown()
-    + mouseUp()
+    + mouseDown(): void
+    + mouseUp(): void
 }
 
 Canvas o--Tool
@@ -710,16 +734,19 @@ Tool <|-- Brush
 classDiagram
 direction LR
 class Context {
-    - currentState
-    + getCurrentState()
-    + setCurrentState()
+    - currentState: State
+    + getCurrentState(): State
+    + setCurrentState(State): void
+    + requests(): void  // inputHandlers
 }
 
 class State {
     <<interface>>
+    + behaviorHandlers(): void
 }
 
 class ConcreteState {
+    + behaviorHandlers(): void
 }
 
 Context o--State
@@ -854,6 +881,12 @@ public class Main {
 }
 ```
 
+---
+
+---
+
+---
+
 ### Iterator Pattern
 
 - Allows iterating over an object without having to expose the object’s internal data structure (which may change in the future).
@@ -863,21 +896,24 @@ public class Main {
 classDiagram
 direction LR
 class BrowseHistory {
-    - urls
-    + addUrl()
-    + removeUrl()
-    + createIterator()
+    - urls: Array
+    - size: int
+    + addUrl(String): void
+    + removeUrl(): String
+    + createIterator(): Iterator
 }
 
 class Iterator {
     <<interface>>
-    + hasNext()
-    + next()
+    + hasNext(): boolean
+    + next(): String
 }
 
-class ListIterator {
-    + hasNext()
-    + next()
+class ArrayIterator {
+    - browserHistory: BrowserHistory
+    - index: int
+    + hasNext(): boolean
+    + next(): String
 }
 
 class Main {
@@ -885,9 +921,9 @@ class Main {
 }
 
 
-BrowseHistory ..> ListIterator
-ListIterator "1" o-- "1" BrowseHistory
-Iterator <|-- ListIterator
+BrowseHistory ..> ArrayIterator
+ArrayIterator "1" o-- "1" BrowseHistory
+Iterator <|-- ArrayIterator
 Main ..> BrowseHistory
 Main ..> Iterator
 ```
@@ -895,8 +931,41 @@ Main ..> Iterator
 ### General Vocabulary
 
 - BrowseHistory is called Aggregate
-- ListIterator is called ConcreteIterator
-- Main is called Client1
+- ArrayIterator is called ConcreteIterator
+- Main is called Client
+
+```mermaid
+%%{init: { "flowchart": { "rankSpacing": 100, "nodeSpacing": 100 }}}%%
+classDiagram
+direction LR
+class Aggregate {
+    - datas
+    + addData()
+    + removeData()
+    + createIterator(): Iterator
+}
+
+class Iterator {
+    <<interface>>
+    + hasNext(): boolean
+    + next()
+}
+
+class ConcreteIterator {
+    - aggregate: Aggregate
+    + hasNext(): boolean
+    + next()
+}
+
+class Client
+
+
+Aggregate ..> ConcreteIterator
+ConcreteIterator "1" o-- "1" Aggregate
+Iterator <|-- ConcreteIterator
+Client ..> Aggregate
+Client ..> Iterator
+```
 
 #### Create Iterator interface
 
@@ -1120,9 +1189,15 @@ public class Main {
 - Encapsulation Violation as Client code must know the internal implementation details of size and urls
 - Tight Coupling as Changes to the internal structure (e.g., switching from array to LinkedList) would break all client code
 
+---
+
+---
+
+---
+
 ### Strategy Pattern
 
-- Allows passing different algorithms (behaviours) to an object.
+- Allows passing different algorithms (behaviors) to an object.
 - Makes algorithm interchangeable.
 - Allows defining a template (skeleton) for an operation. Specific steps will then
   be implemented in subclasses.
@@ -1139,21 +1214,21 @@ public class Main {
 classDiagram
 direction LR
 class PaymentService {
-    - strategy
-    + setPaymentStrategy(PaymentStrategy)
-    + pay()
+    - strategy: PaymentStrategy
+    + setPaymentStrategy(PaymentStrategy): void
+    + pay(): void
 }
 
 class PaymentStrategy {
     <<interface>>
-    + processPayment()
+    + processPayment(): void
 }
 
 class DebitCardPayment {
-    + processPayment()
+    + processPayment(): void
 }
 class EsewaPayment {
-    + processPayment()
+    + processPayment(): void
 }
 
 PaymentService o-- PaymentStrategy
@@ -1166,6 +1241,29 @@ PaymentStrategy <|-- EsewaPayment
 - PaymentService is called Context
 - PaymentStrategy is called Strategy
 - DebitCardPayment / EsewaPayment is called ConcreteStrategy
+
+```mermaid
+%%{init: { "flowchart": { "rankSpacing": 100, "nodeSpacing": 100 }}}%%
+classDiagram
+direction LR
+class Context {
+    - strategy: Strategy
+    + setStrategy(Strategy): void
+    + process(): void
+}
+
+class Strategy {
+    <<interface>>
+    + process(): void
+}
+
+class ConcreteStrategy {
+    + process(): void
+}
+
+Context o-- Strategy
+Strategy <|-- ConcreteStrategy
+```
 
 #### Create PaymentStrategy interface
 
@@ -1186,7 +1284,7 @@ public class PaymentService {
   }
 
   public void pay(){
-      strategy.processPayment(); //Polymorphic Behaviour
+      strategy.processPayment(); //Polymorphic Behavior
   }
 }
 ```
@@ -1257,3 +1355,9 @@ public class Main {
     }
 }
 ```
+
+---
+
+---
+
+---
