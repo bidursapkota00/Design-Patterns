@@ -167,33 +167,60 @@ class OrderProcessor {
 classDiagram
 direction LR
 class Editor {
-    - content
-    + createState()
-    + restore(state)
-    + getContent()
-    + setContent()
+    - content: String
+    + createState(): EditorState
+    + restore(EditorState): void
+    + getContent(): String
+    + setContent(String): void
 }
 
 class EditorState {
-    - content
-    + getContent()
+    - content: String
+    + getContent(): String
 }
 
 class History {
-    + states
-    + push(state)
-    + pop()
+    - states: Stack
+    + push(EditorState): void
+    + pop(): EditorState
 }
 
 Editor  -->  EditorState
 History o-- EditorState
 ```
 
-### General Language
+### General Vocabulary
 
 - Editor is called Originator
 - EditorState is called Memento
 - History is called Caretaker
+
+```mermaid
+%%{init: { "flowchart": { "rankSpacing": 100, "nodeSpacing": 100 }}}%%
+classDiagram
+direction LR
+class Originator {
+    - content: String
+    + createState(): EditorState
+    + restore(EditorState): void
+    + getContent(): String
+    + setContent(String): void
+}
+
+class Memento {
+    - content: String
+    + getContent(): String
+}
+
+class Caretaker {
+    - states: Stack
+    + push(EditorState): void
+    + pop(): EditorState
+}
+
+Originator  -->  Memento
+Caretaker o-- Memento
+```
 
 ### Create EditorState class
 
@@ -431,10 +458,36 @@ Observer <|-- BarChart
 Observer <|-- PieChart
 ```
 
-### General Language
+### General Vocabulary
 
 - DataSource is called Subject
 - BarChart / PieChart is called ConcreteObserver
+
+```mermaid
+%%{init: { "flowchart": { "rankSpacing": 100, "nodeSpacing": 100 }}}%%
+classDiagram
+direction LR
+class Subject {
+    - value
+    + getValue()
+    + setValue(value)
+    + addObserver(obs)
+    + removeObserver(obs)
+    + notifyObservers()
+}
+
+class Observer {
+    <<interface>>
+    + update()
+}
+
+class ConcreteObserver {
+    + update()
+}
+
+Subject "1" o-- "*" Observer
+Observer <|-- ConcreteObserver
+```
 
 #### Create DataSource class
 
@@ -646,11 +699,32 @@ Tool <|-- Selection
 Tool <|-- Brush
 ```
 
-### General Language
+### General Vocabulary
 
 - Canvas is called Context
 - Tool is called State
 - Selection / Brush is called ConcreteState
+
+```mermaid
+%%{init: { "flowchart": { "rankSpacing": 100, "nodeSpacing": 100 }}}%%
+classDiagram
+direction LR
+class Context {
+    - currentState
+    + getCurrentState()
+    + setCurrentState()
+}
+
+class State {
+    <<interface>>
+}
+
+class ConcreteState {
+}
+
+Context o--State
+State <|-- ConcreteState
+```
 
 #### Create Tool interface
 
@@ -818,7 +892,7 @@ Main ..> BrowseHistory
 Main ..> Iterator
 ```
 
-### General Language
+### General Vocabulary
 
 - BrowseHistory is called Aggregate
 - ListIterator is called ConcreteIterator
@@ -1087,7 +1161,7 @@ PaymentStrategy <|-- DebitCardPayment
 PaymentStrategy <|-- EsewaPayment
 ```
 
-### General Language
+### General Vocabulary
 
 - PaymentService is called Context
 - PaymentStrategy is called Strategy
