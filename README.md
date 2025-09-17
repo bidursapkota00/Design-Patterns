@@ -1361,3 +1361,184 @@ public class Main {
 ---
 
 ---
+
+### Command Pattern
+
+- Allows decouple a sender from a receiver. The sender will talk to the receive through a command.
+- Commands can be undone and persisted.
+- Encapsulate a request as an object, thereby letting you parameterize clients with
+  different requests, queue or log requests, and support undoable operations.
+
+#### Applicability
+
+- Use the Command pattern when
+  - Callback function is a function that's registered somewhere to be called at a later point. Commands are an object-oriented replacement for callbacks
+  - Specify, queue, and execute requests at different times.
+  - Support undo. TheCommand's Execute operation can store state for reversing its effects in the command itself
+  - Support logging changes so that they can be reapplied in case of a system crash.
+
+```mermaid
+%%{init: { "flowchart": { "rankSpacing": 100, "nodeSpacing": 100 }}}%%
+classDiagram
+direction LR
+class Button-Framework {
+    - click()
+}
+
+class Command-Framework {
+    - execute()
+}
+
+class AddCustomer-App {
+    - execute()
+}
+
+class CustomerService-App {
+    - addCustomer()
+}
+
+Button-Framework  o--  Command-Framework
+Command-Framework <|-- AddCustomer-App
+CustomerService-App <-- AddCustomer-App
+```
+
+### General Vocabulary
+
+- Button is called Invoker
+- CustomerService is called Receiver
+- AddCustomer is called ConcreteCommand
+
+```mermaid
+%%{init: { "flowchart": { "rankSpacing": 100, "nodeSpacing": 100 }}}%%
+classDiagram
+direction LR
+
+```
+
+### Create Command interface
+
+```java
+public interface Command {
+  void execute();
+}
+```
+
+### Create Button class
+
+```java
+public class Button {
+  private String label;
+  private Command command;
+
+  public Button(Command command) {
+    this.command = command;
+  }
+
+  public void click() {
+    command.execute();
+  }
+
+  public String getLabel() {
+    return label;
+  }
+
+  public void setLabel(String label) {
+    this.label = label;
+  }
+}
+```
+
+### Create CustomerService class
+
+```java
+public class CustomerService {
+    public void addCustomer() {
+        System.out.println("Add Customer");
+    }
+}
+```
+
+### Create AddCustomer class
+
+```java
+public class AddCustomer implements Command {
+    private CustomerService customerService;
+
+    public AddCustomer(CustomerService customerService) {
+        this.customerService = customerService;
+    }
+
+    @Override
+    public void execute() {
+        customerService.addCustomer();
+    }
+}
+```
+
+### Create Main class
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        CustomerService customerService = new CustomerService();
+        Command addCustomerCommand = new AddCustomer(customerService);
+        Button button = new Button(addCustomerCommand);
+        button.click();
+    }
+}
+```
+
+### Without Command Pattern
+
+- Violates Single responsibility principle. The Button class now has two responsibilities:
+  - Managing UI button behavior (label, click handling)
+  - Knowing about specific business operations
+- Violates Dependency Inversion Principle (DIP). The Button class (high-level module) now directly depends on CustomerService (low-level module).
+- Violates Open/Closed Principle (OCP). The Button class is not open for extension but requires modification to support different operations. To add a "Delete Customer" button, you'd need to modify the Button class or create a new button class.
+- Violates Loose Coupling. The Button is now tightly coupled to CustomerService. Any changes to CustomerService might affect Button, and Button can only work with CustomerService operations
+
+```java
+// Button class directly calls CustomerService
+public class Button {
+    private String label;
+    private CustomerService customerService;
+
+    public Button(CustomerService customerService) {
+        this.customerService = customerService;
+    }
+
+    public void click() {
+        customerService.addCustomer();
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+}
+
+// CustomerService class remains the same
+public class CustomerService {
+    public void addCustomer() {
+        System.out.println("Add Customer");
+    }
+}
+
+// Main class - without Command pattern
+public class Main {
+    public static void main(String[] args) {
+        CustomerService customerService = new CustomerService();
+        Button button = new Button(customerService);
+        button.click();
+    }
+}
+```
+
+---
+
+---
+
+---
