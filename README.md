@@ -1382,24 +1382,29 @@ public class Main {
 classDiagram
 direction LR
 class Button-Framework {
-    - click()
+    - label: String
+    - command: Command
+    + click(): void
+    + getLabel(): String
+    + setLabel(String): void
 }
 
 class Command-Framework {
-    - execute()
+    + execute(): void
 }
 
 class AddCustomer-App {
-    - execute()
+    - service: CustomerService
+    + execute(): void
 }
 
 class CustomerService-App {
-    - addCustomer()
+    + addCustomer(): void
 }
 
 Button-Framework  o--  Command-Framework
 Command-Framework <|-- AddCustomer-App
-CustomerService-App <-- AddCustomer-App
+CustomerService-App --o AddCustomer-App
 ```
 
 ### General Vocabulary
@@ -1412,7 +1417,27 @@ CustomerService-App <-- AddCustomer-App
 %%{init: { "flowchart": { "rankSpacing": 100, "nodeSpacing": 100 }}}%%
 classDiagram
 direction LR
+class Invoker {
+    - command: Command
+    + request()
+}
 
+class Command {
+    + execute()
+}
+
+class ConcreteCommand {
+    - service: Receiver
+    + execute()
+}
+
+class Receiver {
+    + services()
+}
+
+Invoker  o--  Command
+Command <|-- ConcreteCommand
+Receiver --o ConcreteCommand
 ```
 
 ### Create Command interface
