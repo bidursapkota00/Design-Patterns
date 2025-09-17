@@ -9,6 +9,7 @@
 5. [State Pattern](#state-pattern)
 6. [Iterator Pattern](#iterator-pattern)
 7. [Strategy Pattern](#strategy-pattern)
+8. [Command Pattern](#command-pattern)
 
 ---
 
