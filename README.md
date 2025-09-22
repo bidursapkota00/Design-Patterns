@@ -1378,35 +1378,7 @@ public class Main {
   - Support undo. TheCommand's Execute operation can store state for reversing its effects in the command itself
   - Support logging changes so that they can be reapplied in case of a system crash.
 
-```mermaid
-%%{init: { "flowchart": { "rankSpacing": 100, "nodeSpacing": 100 }}}%%
-classDiagram
-direction LR
-class Button-Framework {
-    - label: String
-    - command: Command
-    + click(): void
-    + getLabel(): String
-    + setLabel(String): void
-}
-
-class Command-Framework {
-    + execute(): void
-}
-
-class AddCustomer-App {
-    - service: CustomerService
-    + execute(): void
-}
-
-class CustomerService-App {
-    + addCustomer(): void
-}
-
-Button-Framework  o--  Command-Framework
-Command-Framework <|-- AddCustomer-App
-CustomerService-App --o AddCustomer-App
-```
+![Command Pattern Class Diagram](images/command_pattern.drawio.svg)
 
 ### General Vocabulary
 
@@ -1414,32 +1386,7 @@ CustomerService-App --o AddCustomer-App
 - CustomerService is called Receiver
 - AddCustomer is called ConcreteCommand
 
-```mermaid
-%%{init: { "flowchart": { "rankSpacing": 100, "nodeSpacing": 100 }}}%%
-classDiagram
-direction LR
-class Invoker {
-    - command: Command
-    + request()
-}
-
-class Command {
-    + execute()
-}
-
-class ConcreteCommand {
-    - service: Receiver
-    + execute()
-}
-
-class Receiver {
-    + services()
-}
-
-Invoker  o--  Command
-Command <|-- ConcreteCommand
-Receiver --o ConcreteCommand
-```
+![Command Pattern Class Diagram](images/command_pattern_general.drawio.svg)
 
 ### Create Command interface
 
