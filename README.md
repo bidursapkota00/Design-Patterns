@@ -1400,50 +1400,41 @@ public interface Command {
 
 ```java
 public class Button {
-  private String label;
-  private Command command;
+    private Command command;
 
-  public Button(Command command) {
-    this.command = command;
-  }
+    public Button(Command command) {
+        this.command = command;
+    }
 
-  public void click() {
-    command.execute();
-  }
-
-  public String getLabel() {
-    return label;
-  }
-
-  public void setLabel(String label) {
-    this.label = label;
-  }
-}
-```
-
-### Create CustomerService class
-
-```java
-public class CustomerService {
-    public void addCustomer() {
-        System.out.println("Add Customer");
+    public void click() {
+        command.execute();
     }
 }
 ```
 
-### Create AddCustomer class
+### Create TextEditor class
 
 ```java
-public class AddCustomer implements Command {
-    private CustomerService customerService;
+public class TextEditor {
+    public void boldText() {
+        System.out.println("Text has been bolded.");
+    }
+}
+```
 
-    public AddCustomer(CustomerService customerService) {
-        this.customerService = customerService;
+### Create BoldCommand class
+
+```java
+class BoldCommand implements Command {
+    private TextEditor editor;
+
+    public BoldCommand(TextEditor editor){
+        this.editor = editor;
     }
 
     @Override
     public void execute() {
-        customerService.addCustomer();
+        editor.boldText();
     }
 }
 ```
@@ -1453,9 +1444,9 @@ public class AddCustomer implements Command {
 ```java
 public class Main {
     public static void main(String[] args) {
-        CustomerService customerService = new CustomerService();
-        Command addCustomerCommand = new AddCustomer(customerService);
-        Button button = new Button(addCustomerCommand);
+        TextEditor editor = new TextEditor();
+        var boldCommand = new BoldCommand(editor);
+        Button button = new Button(boldCommand);
         button.click();
     }
 }
@@ -1471,41 +1462,376 @@ public class Main {
 - Violates Loose Coupling. The Button is now tightly coupled to CustomerService. Any changes to CustomerService might affect Button, and Button can only work with CustomerService operations
 
 ```java
-// Button class directly calls CustomerService
+// Direct use on click
 public class Button {
-    private String label;
-    private CustomerService customerService;
+    private TextEditor editor;
 
-    public Button(CustomerService customerService) {
-        this.customerService = customerService;
+    public Button(TextEditor editor) {
+        this.editor = editor;
     }
 
     public void click() {
-        customerService.addCustomer();
-    }
-
-    public String getLabel() {
-        return label;
-    }
-
-    public void setLabel(String label) {
-        this.label = label;
+        editor.boldText();
     }
 }
 
-// CustomerService class remains the same
-public class CustomerService {
-    public void addCustomer() {
-        System.out.println("Add Customer");
+// Same
+public class TextEditor {
+    public void boldText() {
+        System.out.println("Text has been bolded.");
     }
 }
 
 // Main class - without Command pattern
 public class Main {
     public static void main(String[] args) {
-        CustomerService customerService = new CustomerService();
-        Button button = new Button(customerService);
+        TextEditor textEditor = new TextEditor();
+        Button button = new Button(textEditor);
         button.click();
+    }
+}
+```
+
+### Composite Command
+
+```mermaid
+%%{init: { "flowchart": { "rankSpacing": 100, "nodeSpacing": 100 }}}%%
+classDiagram
+direction LR
+class Command {
+    <<interface>>
+    + execute()
+}
+
+class ConcreteCommand {
+    - service
+    + execute()
+}
+
+class CompositeCommand {
+    - commands: List
+    + addCommand(Command)
+    + execute()
+}
+
+Command <|-- ConcreteCommand
+Command <|-- CompositeCommand
+ConcreteCommand "*" --o "1" CompositeCommand
+```
+
+#### Add italicizeText functionality in CustomerService
+
+```java
+public void italicizeText() {
+    System.out.println("Text has been italicized.");
+}
+```
+
+#### Create ItalicCommand Command
+
+```java
+class ItalicCommand implements Command {
+    private TextEditor editor;
+
+    public ItalicCommand(TextEditor editor){
+        this.editor = editor;
+    }
+
+    @Override
+    public void execute() {
+        editor.italicizeText();
+    }
+}
+```
+
+#### Create ComplexCommand Command
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+public class ComplexCommand implements Command {
+    private List<Command> commands = new ArrayList<>();
+
+    public void addCommand(Command command) {
+        commands.add(command);
+    }
+
+    @Override
+    public void execute() {
+        for (var command: commands) {
+            command.execute();
+        }
+    }
+}
+```
+
+#### Update main
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        TextEditor editor = new TextEditor();
+        var boldCommand = new BoldCommand(editor);
+        var italicCommand = new ItalicCommand(editor);
+        var complexCommand = new ComplexCommand();
+        complexCommand.addCommand(boldCommand);
+        complexCommand.addCommand(italicCommand);
+        Button button = new Button(complexCommand);
+        button.click();
+    }
+}
+```
+
+### Undoable Command
+
+```mermaid
+%%{init: { "flowchart": { "rankSpacing": 100, "nodeSpacing": 100 }}}%%
+classDiagram
+direction LR
+class Command {
+    <<interface>>
+    + execute()
+}
+
+class UndoableCommand {
+    <<interface>>
+    + unexecute()
+}
+
+class ConcreteUndoableCommand {
+    + execute()
+    + unexecute()
+}
+
+class ConcreteCommand {
+    + execute()
+}
+
+
+Command <|-- UndoableCommand: extends
+UndoableCommand <|-- ConcreteUndoableCommand: implements
+Command <|-- ConcreteCommand: implements
+```
+
+### History
+
+- Memento pattern can be used, however we use snapshot of data in memento pattern
+- Storing snapshot of data might not be necessary, we only save commands
+- For eg: if functionality is to change video from 1080p to 720p, it is not sensible to save snapshot of entire video. we only save command of `1080p to 720p`. So, Memento class is not created.
+
+```mermaid
+%%{init: { "flowchart": { "rankSpacing": 100, "nodeSpacing": 100 }}}%%
+classDiagram
+direction LR
+class History {
+    - undoableCommands: Stack
+    + push(UndoableCommand)
+    + pop(): UndoableCommand
+}
+
+class TextEditor {
+    - content: String
+    + boldText()
+    + setContent(String)
+    + getContent(): String
+}
+
+class BoldCommand {
+    - prevContent: String
+    - editor: TextEditor
+    - history: History
+    + execute()
+    + unexecute()
+}
+
+class UndoCommand {
+    - history: History
+    + execute()
+}
+
+
+UndoCommand o-- History
+BoldCommand o-- TextEditor
+BoldCommand o-- History
+```
+
+### Complete Command Pattern with History
+
+```mermaid
+%%{init: { "flowchart": { "rankSpacing": 100, "nodeSpacing": 100 }}}%%
+classDiagram
+direction LR
+class Command {
+    <<interface>>
+    + execute()
+}
+
+class UndoableCommand {
+    <<interface>>
+    + unexecute()
+}
+
+class Button {
+    - command: Command
+    + click(): void
+}
+
+class History {
+    - undoableCommands: Stack
+    + push(UndoableCommand)
+    + pop(): UndoableCommand
+}
+
+class TextEditor {
+    - content: String
+    + boldText()
+    + setContent(String)
+    + getContent(): String
+}
+
+class BoldCommand {
+    - prevContent: String
+    - editor: TextEditor
+    - history: History
+    + execute()
+    + unexecute()
+}
+
+class UndoCommand {
+    - history: History
+    + execute()
+}
+
+
+Command <|-- UndoableCommand
+UndoableCommand <|-- BoldCommand
+Command <|-- UndoCommand
+History o-- "*" UndoableCommand
+UndoCommand o-- History
+BoldCommand o-- TextEditor
+BoldCommand o-- History
+Button  o--  Command
+```
+
+#### Create UndoableCommand interface
+
+```java
+public interface UndoableCommand extends Command {
+    void unexecute();
+}
+```
+
+#### Create History class
+
+```java
+import java.util.Stack;
+
+public class History {
+    private Stack<UndoableCommand> commands = new Stack<>();
+
+    public void push(UndoableCommand command) {
+        commands.push(command);
+    }
+
+    public UndoableCommand pop() {
+        return commands.pop();
+    }
+}
+```
+
+#### Create UndoCommand
+
+- Will be linked to undo button
+
+```java
+public class UndoCommand implements Command {
+    private History history;
+
+    public UndoCommand(History history) {
+        this.history = history;
+    }
+
+    @Override
+    public void execute() {
+        history.pop().unexecute();
+    }
+}
+```
+
+#### Update TextEditor
+
+```java
+public class TextEditor {
+    private String content;
+
+    public void boldText() {
+        content = "<b>" + content + "</b>";
+    }
+
+    public void italicizeText() {
+        content = "<i>" + content + "</i>";
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+}
+```
+
+#### Update BoldCommand
+
+```java
+class BoldCommand implements UndoableCommand {
+    private String prevContent;
+    private TextEditor editor;
+    private History history;
+
+    public BoldCommand(TextEditor editor, History history){
+        this.editor = editor;
+        this.history = history;
+    }
+
+    @Override
+    public void unexecute() {
+        editor.setContent(prevContent);
+    }
+
+    @Override
+    public void execute() {
+        prevContent = editor.getContent();
+        editor.boldText();
+        history.push(this);
+    }
+}
+```
+
+#### Update Main
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        TextEditor editor = new TextEditor();
+        History history = new History();
+
+        editor.setContent("Hello World");
+        System.out.println(editor.getContent());
+
+        var boldCommand = new BoldCommand(editor, history);
+        Button button1 = new Button(boldCommand);
+        button1.click();
+
+        System.out.println(editor.getContent());
+
+        var undoCommand  = new UndoCommand(history);
+        Button button2 = new Button(undoCommand);
+        button2.click();
+
+        System.out.println(editor.getContent());
     }
 }
 ```
