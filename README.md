@@ -1378,7 +1378,7 @@ public class Main {
   - Support undo. TheCommand's Execute operation can store state for reversing its effects in the command itself
   - Support logging changes so that they can be reapplied in case of a system crash.
 
-![Command Pattern Class Diagram](images/command_pattern.drawio.svg)
+![Command Pattern Class Diagram](images/command_pattern.webp)
 
 ### General Vocabulary
 
@@ -1386,7 +1386,7 @@ public class Main {
 - CustomerService is called Receiver
 - AddCustomer is called ConcreteCommand
 
-![Command Pattern Class Diagram](images/command_pattern_general.drawio.svg)
+![Command Pattern Class Diagram](images/command_pattern_general.webp)
 
 ### Create Command interface
 
